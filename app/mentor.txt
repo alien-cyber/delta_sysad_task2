@@ -1,0 +1,4 @@
+Name Domain MenteeCapacity
+vishrudh 106123066 web  17
+purav 106123088 sysad 10
+avyyukt 106123044 sysad 9

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #16d1d4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+    </style>
+    <script>
+        function toggleVisibility(sectionId) {
+            var section = document.getElementById(sectionId);
+            section.style.display = (section.style.display === 'none') ? 'block' : 'none';
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome, {{ current_user[1] }}!</h1>
+       
+        {% if role == 'core' %}
+            {% if null_rows%}
+            {% if null_rows[0] == "allocate" %}
+                    <p>{{ msg }}</p>
+                    <form action="/allocate_mentor" method="POST">
+                        <button type="submit">Allocate Mentor to Mentee</button>
+                    </form>
+                {% else %}
+                    <p>{{ msg }}</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Roll No</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in null_rows %}
+                                <tr>
+                                    <td>{{ row[1] }}</td>
+                                    <td>{{ row[2] }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+                
+            
+           
+                
+            {% else %}
+            <p>{{ msg }}</p>
+            
+            <div class="section">
+                <button onclick="toggleVisibility('mentors-section')">View Mentors</button>
+                <div id="mentors-section" style="display: none;">
+                    <h2>Mentors:</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Roll No</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mentor in mentors %}
+                                <tr onclick="toggleVisibility('mentees-section-{{ mentor[2] }}')">
+                                    <td>{{ mentor[1] }}</td>
+                                    <td>{{ mentor[2] }}</td>
+                                </tr>
+                                <tr id="mentees-section-{{ mentor[2] }}" style="display: none;">
+                                    <td colspan="2">
+                                        <h3>Mentees of {{ mentor[1] }}:</h3>
+                                        <ul>
+                                            {% for mentee in mentees if mentee[5] == mentor[2] %}
+                                                <li onclick="toggleVisibility('forms-{{ mentee[2] }}')">{{ mentee[1] }}</li>
+                                                <ul id="forms-{{ mentee[2] }}" style="display: none;">
+                                                    {% for form in forms if form[2] == mentee[2] %}
+                                                        <li>{{ form[1] }} project link: <a href="{{ form[3] }}" target="_blank">{{ form[3] }}</a></li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% endfor %}
+                                        </ul>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        {% elif role == 'mentor' %}
+            {% if null_rows %}
+                <p>{{ msg }}</p>
+                
+            {% else %}
+                <p>{{ msg }}</p>
+                <div class="section">
+                    <h2>Your Mentees:</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Roll No</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mentee in mentees %}
+                                <tr onclick="toggleVisibility('forms-{{ mentee[2] }}')">
+                                    <td>{{ mentee[1] }}</td>
+                                    <td>{{ mentee[2] }}</td>
+                                </tr>
+                                <tr id="forms-{{ mentee[2] }}" style="display: none;">
+                                    <td colspan="2">
+                                        <h3>Submitted Forms:</h3>
+                                        <ul>
+                                            {% for form in forms if form[2] == mentee[2] %}
+                                                <li>{{ form[1] }} project link: <a href="{{ form[3] }}" target="_blank">{{ form[3] }}</a></li>
+                                            {% endfor %}
+                                        </ul>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+            {% endif %}
+        {% elif role == 'mentee' %}
+            {% if null_rows %}
+                <p>{{ msg }}</p>
+                <div class="section">
+                    <h2>Your Submitted Forms:</h2>
+                    <ul>
+                        {% for form in forms %}
+                            <form action="/submit_url" method="POST">
+                                <label for="{{ form[1] }}">Enter your {{ form[1] }} project Github URL:</label>
+                                <input type="text" name="{{ form[1] }}" required style="border: 1px solid #0e0d0d; padding: 10px; font-size: 14px;">
+
+                                <button type="submit">Submit</button>
+                            </form>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% else %}
+                <p>{{ msg }}</p>
+                <form action="/submit_domain" method="POST">
+                    <input type="checkbox" id="wb" name="domain" value="w">
+                    <label for="wb">Web Development</label><br>
+
+                    <input type="checkbox" id="sysad" name="domain" value="s">
+                    <label for="sysad">System Administration</label><br>
+
+                    <input type="checkbox" id="app" name="domain" value="a">
+                    <label for="app">App Development</label><br>
+
+                    <button type="submit">Submit</button>
+                </form>
+            {% endif %}
+        {% endif %}
+    </div>
+</body>
+</html>
