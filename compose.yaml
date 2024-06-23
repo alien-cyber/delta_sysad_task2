@@ -14,6 +14,8 @@ services:
     build: ./apache-static
     ports:
       - "3000:80"
+    extra_hosts:
+      - "gemini.club:162.242.195.82"
     
     
 
